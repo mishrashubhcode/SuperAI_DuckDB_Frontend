@@ -16,6 +16,7 @@ const App = () => {
   const [offset, setOffset] = useState(0); // Default offset
 
   //const url = "http://localhost:5000"; //
+  const url = "https://super-ai-duck-db-backend.vercel.app/";
 
   const [badgeCount, setBadgeCount] = useState(0);
 
