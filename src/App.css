@@ -1,0 +1,89 @@
+/* Root container with centered content and responsive max width */
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: #f4f7fc;
+  min-height: 100vh;
+}
+
+/* Logo styling with a smooth transition on hover */
+.logo {
+  height: 6rem;
+  width: auto;
+  padding: 1.5em;
+  transition: transform 300ms ease, filter 300ms ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 15px rgba(100, 103, 255, 0.8));
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 15px rgba(97, 218, 251, 0.8));
+}
+
+/* Keyframes for smooth rotation of the logo */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Applying animation to specific link */
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 15s linear;
+  }
+}
+
+/* Card styling with refined padding and shadows */
+.card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 2.5em;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Styling for links that lead to documentation */
+.read-the-docs {
+  color: #4a4a4a;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 300ms ease;
+}
+
+.read-the-docs:hover {
+  color: #646cff;
+}
+
+/* General responsive adjustments */
+@media (max-width: 768px) {
+  #root {
+    padding: 2rem;
+  }
+
+  .logo {
+    height: 5rem;
+  }
+
+  .card {
+    padding: 1.5em;
+  }
+
+  .read-the-docs {
+    font-size: 0.9rem;
+  }
+}
