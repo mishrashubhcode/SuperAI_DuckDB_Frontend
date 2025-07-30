@@ -5,18 +5,18 @@ import { FaChartLine, FaRegCalendarAlt, FaUsers, FaMoneyBillWave, FaPaperclip, F
 import Skeleton from './components/Skeleton';
 
 const App = () => {
-
   const [prompt, setPrompt] = useState("");
   const [csvData, setCsvData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [display, setDisplay] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);  // Upload status state
 
   const [limit, setLimit] = useState(10); // Default limit
   const [offset, setOffset] = useState(0); // Default offset
 
   //const url = "http://localhost:5000"; //
-  const url = "https://super-ai-duck-db-backend.vercel.app/";
+  const url = "https://super-ai-duck-db-backend.vercel.app/"; // Uncomment for production
 
   const [badgeCount, setBadgeCount] = useState(0);
 
@@ -45,7 +45,7 @@ const App = () => {
       });
       console.log(res.data);
       setCsvFile(res.data.filePath);
-      alert("File uploaded successfully!"); // Alert added after successful upload
+      alert("File uploaded successfully!");
       return res.data;
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -135,130 +135,174 @@ const App = () => {
   };
 
   return (
-    <div className="flex w-full h-full items-center justify-center flex-col py-10 px-10 gap-4">
-      <div className="flex flex-col gap-3 mt-9 justify-center items-center">
-        <h2 className="text-3xl font-bold">DuckDB Query Interface</h2>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black text-white flex flex-col items-center px-6 py-12">
+      <header className="mb-10 text-center max-w-3xl">
+        <h1 className="text-4xl font-extrabold tracking-wide mb-3 drop-shadow-lg">
+          AI-Powered DuckDB Query Interface
+        </h1>
+        <p className="text-indigo-300 text-lg max-w-xl mx-auto">
+          Upload your CSV data and generate SQL queries effortlessly using cutting-edge AI.
+        </p>
+      </header>
 
-      <div className="flex w-[70vw] items-center">
-        <label className="inline-flex items-center cursor-pointer">
-        </label>
-      </div>
+      <main className="bg-gradient-to-tr from-purple-800 via-indigo-800 to-indigo-900 rounded-3xl shadow-2xl p-8 w-full max-w-[900px] flex flex-col gap-8">
 
-      <div className="rounded-xl w-[70vw] h-[50vh] flex p-5 shadow-lg shadow-slate-300 gap-2 flex-col mb-5">
-        <h2 className="text-gray-500">Please enter your query below: </h2>
-        <div className="flex flex-row gap-2 mt-2 flex-wrap">
-          <button className='flex items-center justify-center shadow-sm rounded-lg py-1 px-4 gap-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105'
-            onClick={() => customPrompt("Find the top 10 customers with the most orders")}>
-            <FaChartLine size={18} />
-            <span>
-              Find the top 10 customers with the most orders
-            </span>
-          </button>
-          <button className='flex items-center justify-center shadow-sm rounded-lg py-1 px-4 gap-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105'
-            onClick={() => customPrompt("Identify customers with total spending above $5000")}>
-            <FaMoneyBillWave size={18} />
-            <span>
-              Identify customers with total spending above $5000
-            </span>
-          </button>
+        {/* Query Preset Buttons */}
+        <section className="flex flex-wrap gap-4 justify-center">
+          {[
+            { icon: <FaChartLine size={20} />, label: "Top 10 customers by orders", prompt: "Find the top 10 customers with the most orders" },
+            { icon: <FaMoneyBillWave size={20} />, label: "Customers spending above $5,000", prompt: "Identify customers with total spending above $5000" },
+            { icon: <FaRegCalendarAlt size={20} />, label: "Orders in last 30 days", prompt: "List all orders where Order Date is greater than year 2024" },
+            { icon: <FaUsers size={20} />, label: "Avg spending per order by region", prompt: "Calculate the average spending per order by region" }
+          ].map(({ icon, label, prompt }, i) => (
+            <button
+              key={i}
+              onClick={() => customPrompt(prompt)}
+              className="flex items-center gap-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              {icon}
+              <span className="font-semibold text-white whitespace-nowrap">{label}</span>
+            </button>
+          ))}
+        </section>
 
-          <button className='flex items-center justify-center shadow-sm rounded-lg py-1 px-4 gap-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105'
-            onClick={() => customPrompt("Show a list of all orders made in the last 30 days")}>
-            <FaRegCalendarAlt size={18} />
-            <span>
-              Show a list of all orders made in the last 30 days
-            </span>
-          </button>
-          <button className='flex items-center justify-center shadow-sm rounded-lg py-1 px-4 gap-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105'
-            onClick={() => customPrompt("Calculate the average spending per order by region")}>
-            <FaUsers size={18} />
-            <span>
-              Calculate the average spending per order by region
-            </span>
-          </button>
-
-        </div>
-        <div className="flex flex-col h-full shadow-sm rounded-xl p-3 border-[1px] border-gray-300 mt-3">
+        {/* Query Input Area */}
+        <section className="flex flex-col gap-4">
           <textarea
-            className="flex-1 placeholder-gray-500 focus:outline-none focus:ring-0 border-none bg-transparent"
-            placeholder='Enter your query here...'
-            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter your query here..."
             value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={5}
+            className="w-full p-4 text-lg rounded-xl bg-indigo-900 border border-indigo-700 placeholder-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-600 resize-none shadow-lg text-white"
           />
-          <div className='flex flex-row'>
-            <label className="flex items-center mx-2 cursor-pointer">
-              <FaPaperclip size={18} />
+
+          <div className="flex items-center gap-4">
+            <label className="flex items-center mx-2">
+              <FaPaperclip size={18} className="cursor-pointer" />
               <input
                 type="file"
                 className="hidden"
-                onChange={(e) => uploadFile(e.target.files[0])}
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setIsUploading(true);
+                    try {
+                      await uploadFile(file);
+                    } catch (error) {
+                      alert(error.message);
+                    } finally {
+                      setIsUploading(false);
+                    }
+                  }
+                }}
                 accept=".csv,.txt"
+                disabled={isUploading}
               />
             </label>
-            {csvFile && <span className="ml-2 text-gray-700">{csvFile.split('/').pop()}</span>}
-            <button className={`bg-blue-500 py-1 px-2 rounded-lg mx-2 ml-auto ${isLoading ? "bg-slate-400 cursor-not-allowed" : ""}`} onClick={generateSQL}><FaArrowRight size={18} className='text-white' /></button>
-          </div>
-        </div>
-      </div>
 
-      {display && (
-        <div className="rounded-xl w-[70vw] h-auto flex shadow-lg shadow-slate-300 flex-col mb-5">
-          {isLoading ? <Skeleton /> :
-            <>
-              <div className="flex w-full items-center justify-between border-b p-5">
-                <div className="font-bold">Query Results</div>
-                <button className="border border-gray-300 rounded-md flex gap-2 py-1 px-2 text-sm hover:bg-gray-100 active:scale-95" onClick={handleDownload}>
-                  <FaDownload size={18} />
-                  <span>Download CSV</span>
-                </button>
-              </div>
-              <div className="overflow-auto h-[56vh] px-3">
-                <table className="table-auto w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="border-b px-4 py-3 text-left text-sm text-gray-400">INDEX</th>
-                      {csvData && csvData.length > 0 && csvData[0].map((header, index) => (
-                        <th
-                          key={index}
-                          className="border-b px-4 py-3 text-left text-sm text-gray-400"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {csvData && csvData.slice(1, -1).map((row, rowIndex) => (
-                      <tr key={rowIndex} className={`text-gray-400`}>
-                        <td className=" px-4 py-2 text-sm text-gray-700">{rowIndex + 1}</td>
-                        {row.map((cell, cellIndex) => (
-                          <td
-                            key={cellIndex}
-                            className=" px-4 py-2 text-sm text-gray-700"
-                          >
-                            {cell}
-                          </td>
+
+            {/* Upload status */}
+            {isUploading && (
+              <span className="text-indigo-300 animate-pulse select-none">Uploading file, please wait...</span>
+            )}
+            {csvFile && !isUploading && (
+              <span className="text-green-400 select-none truncate max-w-xs">
+                ✓ Uploaded: {csvFile.split('/').pop()}
+              </span>
+            )}
+
+            <button
+              onClick={generateSQL}
+              disabled={isLoading || isUploading}
+              className={`ml-auto bg-indigo-500 text-white rounded-lg p-3 shadow-lg transition transform hover:scale-110 active:scale-95 disabled:bg-indigo-800 disabled:cursor-not-allowed`}
+              aria-label="Generate SQL"
+            >
+              <FaArrowRight size={20} />
+            </button>
+          </div>
+        </section>
+
+        {/* Query Results */}
+        {display && (
+          <section className="bg-indigo-900 rounded-2xl p-6 shadow-xl">
+            {isLoading ? (
+              <Skeleton />
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-indigo-50">Query Results ({csvData.length - 1} rows)</h2>
+                  <button
+                    onClick={handleDownload}
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 bg-indigo-700 hover:bg-indigo-600 transition"
+                  >
+                    <FaDownload />
+                    <span>Download CSV</span>
+                  </button>
+                </div>
+
+                <div className="overflow-auto max-h-[55vh] border border-indigo-700 rounded-lg">
+                  <table className="min-w-full border-collapse text-indigo-100">
+                    <thead className="bg-indigo-800 sticky top-0">
+                      <tr>
+                        <th className="text-left py-3 px-4 border-b border-indigo-700 font-semibold">#</th>
+                        {csvData.length > 0 && csvData[0].map((header, idx) => (
+                          <th key={idx} className="text-left py-3 px-4 border-b border-indigo-700 font-semibold whitespace-nowrap">
+                            {header}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-between px-5 py-2">
-                <button onClick={() => handlePaginationChange('prev')} disabled={offset === 0} className="py-1 px-2 bg-gray-300 rounded">
-                  Previous
-                </button>
-                <button onClick={() => handlePaginationChange('next')} className="py-1 px-2 bg-gray-300 rounded">
-                  Next
-                </button>
-              </div>
-            </>
-          }
-        </div>
-      )}
+                    </thead>
+
+                    <tbody>
+                      {csvData.length > 1 ? csvData.slice(1).map((row, rowIndex) => (
+                        <tr
+                          key={rowIndex}
+                          className={`hover:bg-indigo-700 ${rowIndex % 2 === 0 ? "bg-indigo-900" : "bg-indigo-800"}`}
+                        >
+                          <td className="py-2 px-4 border-b border-indigo-700">{rowIndex + 1}</td>
+                          {row.map((cell, cellIndex) => (
+                            <td key={cellIndex} className="py-2 px-4 border-b border-indigo-700 truncate max-w-xs whitespace-nowrap" title={cell}>
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={csvData[0].length + 1} className="text-center py-4 text-indigo-300">No data available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex justify-between mt-4">
+                  <button
+                    onClick={() => handlePaginationChange('prev')}
+                    disabled={offset === 0}
+                    className={`px-4 py-2 rounded ${offset === 0 ? "bg-indigo-700 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"}`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => handlePaginationChange('next')}
+                    disabled={offset + limit >= csvData.length - 1}
+                    className={`px-4 py-2 rounded ${offset + limit >= csvData.length - 1 ? "bg-indigo-700 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"}`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+      </main>
+
+      <footer className="mt-auto pt-16 pb-6 text-indigo-400 text-center select-none">
+        Built with 💜 using React, Flask & DuckDB
+      </footer>
     </div>
   );
-}
+};
 
 export default App;
